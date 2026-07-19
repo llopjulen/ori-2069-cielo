@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Constelación</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=Instrument+Sans:wght@400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────
+   CONFIGURACIÓN — cambia esto y ya está
+   ───────────────────────────────────────────── */
+:root{
+  --ink:      #06070D;
+  --ink-2:    #0B0E1A;
+  --star:     #F3EFE6;
+  --halo:     #8A97E8;
+  --oro:      #D9B06C;
+  --muted:    #666E88;
+  --line:     rgba(138,151,232,.22);
+
+  --display: "Fraunces", Georgia, serif;
+  --body:    "Instrument Sans", system-ui, sans-serif;
+  --mono:    "JetBrains Mono", ui-monospace, monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--ink);
+  color:var(--star);
+  font-family:var(--body);
+  font-size:16px;
+  line-height:1.6;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+#sky{position:fixed;inset:0;z-index:0;display:block}
+.veil{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(138,151,232,.10), transparent 60%),
+    radial-gradient(100% 60% at 50% 100%, rgba(6,7,13,.9), transparent 70%);
+}
+.wrap{position:relative;z-index:2;max-width:940px;margin:0 auto;padding:0 24px}
+
+/* ── hero ── */
+.hero{min-height:100svh;display:flex;flex-direction:column;justify-content:center;padding:96px 0 64px}
+.eyebrow{
+  font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:28px;
+}
+.hero h1{
+  font-family:var(--display);
+  font-weight:300;
+  font-size:clamp(2.6rem,8vw,5rem);
+  line-height:1.02;
+  letter-spacing:-.02em;
+}
+.hero h1 em{font-style:italic;font-weight:400;color:var(--oro)}
+.hero p{max-width:44ch;margin-top:24px;color:#A8AFC4;font-size:1.05rem}
+
+.count{margin-top:56px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.count .n{font-family:var(--mono);font-size:clamp(2rem,7vw,3.4rem);font-weight:300;color:var(--star);letter-spacing:-.04em}
+.count .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+
+/* ── audio ── */
+.play{
+  margin-top:40px;display:inline-flex;align-items:center;gap:12px;
+  background:none;border:1px solid var(--line);border-radius:999px;
+  color:var(--star);font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  padding:12px 22px;cursor:pointer;transition:border-color .3s,color .3s;
+  align-self:flex-start;
+}
+.play:hover{border-color:var(--halo);color:var(--halo)}
+.play .dot{width:6px;height:6px;border-radius:50%;background:var(--oro);transition:transform .4s}
+.play.on .dot{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.9);opacity:.4}}
+
+/* ── secciones ── */
+.sec{padding:110px 0;border-top:1px solid rgba(255,255,255,.06)}
+.sec h2{
+  font-family:var(--display);font-weight:300;font-size:clamp(1.7rem,4.5vw,2.6rem);
+  letter-spacing:-.015em;margin-bottom:12px;
+}
+.sec .sub{color:var(--muted);font-size:.95rem;max-width:48ch;margin-bottom:48px}
+
+/* ── constelación ── */
+.constel{position:relative;width:100%;aspect-ratio:16/10;min-height:340px}
+.constel svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.constel svg line{stroke:var(--line);stroke-width:1;stroke-dasharray:220;stroke-dashoffset:220;animation:draw 1.6s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+.node{
+  position:absolute;transform:translate(-50%,-50%);
+  background:none;border:0;padding:14px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+}
+.node .pt{
+  width:9px;height:9px;border-radius:50%;background:var(--star);
+  box-shadow:0 0 0 0 rgba(243,239,230,.5);
+  transition:transform .35s cubic-bezier(.2,.9,.3,1.4),box-shadow .35s,background .35s;
+}
+.node:hover .pt,.node:focus-visible .pt{transform:scale(1.9);box-shadow:0 0 18px 5px rgba(217,176,108,.45);background:var(--oro)}
+.node .tag{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);white-space:nowrap;transition:color .3s;
+}
+.node:hover .tag,.node:focus-visible .tag{color:var(--star)}
+.node.done .pt{background:var(--halo);opacity:.55}
+.node:focus{outline:none}
+.node:focus-visible{outline:1px solid var(--halo);outline-offset:6px;border-radius:8px}
+
+/* ── panel ── */
+.panel{
+  position:fixed;inset:0;z-index:20;display:none;
+  background:rgba(6,7,13,.82);backdrop-filter:blur(14px);
+  align-items:center;justify-content:center;padding:24px;
+}
+.panel.open{display:flex}
+.card{
+  background:var(--ink-2);border:1px solid var(--line);border-radius:4px;
+  max-width:460px;width:100%;padding:40px;
+}
+.card .k{font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--oro);margin-bottom:18px}
+.card h3{font-family:var(--display);font-weight:300;font-size:1.9rem;line-height:1.15;margin-bottom:14px}
+.card p{color:#A8AFC4;font-size:.98rem}
+.card .close{
+  margin-top:32px;background:none;border:1px solid var(--line);color:var(--muted);
+  font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  padding:10px 18px;cursor:pointer;transition:color .3s,border-color .3s;
+}
+.card .close:hover{color:var(--star);border-color:var(--star)}
+
+/* ── añadir ── */
+.add{margin-top:56px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.add input{
+  flex:1;min-width:220px;background:none;border:0;border-bottom:1px solid var(--line);
+  color:var(--star);font-family:var(--body);font-size:1rem;padding:12px 2px;
+}
+.add input::placeholder{color:var(--muted)}
+.add input:focus{outline:none;border-bottom-color:var(--oro)}
+.add button{
+  background:none;border:1px solid var(--line);color:var(--star);
+  font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  padding:13px 24px;cursor:pointer;transition:background .3s,color .3s,border-color .3s;
+}
+.add button:hover{background:var(--star);color:var(--ink);border-color:var(--star)}
+.hint{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--muted);margin-top:16px}
+
+/* ── ya pasó ── */
+.past{display:grid;gap:2px}
+.past li{
+  list-style:none;display:flex;gap:20px;align-items:baseline;
+  padding:20px 0;border-bottom:1px solid rgba(255,255,255,.05);
+}
+.past .when{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);min-width:78px}
+.past .what{font-family:var(--display);font-weight:300;font-size:1.15rem}
+
+/* ── línea del día ── */
+.daily{padding:120px 0 140px;text-align:center}
+.daily .k{font-family:var(--mono);font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--muted);margin-bottom:26px}
+.daily blockquote{
+  font-family:var(--display);font-style:italic;font-weight:300;
+  font-size:clamp(1.25rem,3.2vw,1.85rem);line-height:1.45;max-width:32ch;margin:0 auto;color:var(--star);
+}
+.foot{padding:0 0 80px;text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:#3A4058;text-transform:uppercase}
+
+#yt{position:fixed;bottom:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1}
+
+@media(max-width:620px){
+  .sec{padding:80px 0}
+  .constel{aspect-ratio:1/1.15}
+  .node .tag{font-size:9.5px}
+  .card{padding:28px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<canvas id="sky"></canvas>
+<div class="veil"></div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">para Ari la infeliz</div>
+    <h1>Porque te encantan las estrellas,<br>este es <em>nuestro cielo</em>.</h1>
+    <p>Un regalito para ti. Aquí apuntaremos los planes que se nos ocurran, y puedes entrar a verlos cuando quieras. Así se nos pasará más rápido y no se nos olvidará ninguno. Para que tengas algo más que te guste, y un recuerdo mío.</p>
+
+    <div class="count">
+      <span class="n" id="dias">—</span>
+      <span class="lbl">días para vernos</span>
+    </div>
+
+    <div class="count" style="margin-top:40px;gap:10px">
+      <button class="play" id="play" aria-label="Reproducir la canción">
+        <span class="dot"></span><span id="playtxt">poner música</span>
+      </button>
+      <button class="play" id="skip" aria-label="Cambiar de canción">cambiar</button>
+    </div>
+    <p class="hint" id="nota"></p>
+  </header>
+
+  <section class="sec">
+    <h2>La constelación</h2>
+    <p class="sub">Cada estrella es una cita pendiente. Las que están hechas se ponen en azul.</p>
+
+    <div class="constel" id="constel">
+      <svg id="lines" aria-hidden="true"></svg>
+    </div>
+
+    <div class="add">
+      <input id="txt" type="text" placeholder="Añade una estrella tuya…" maxlength="60" aria-label="Nombre del plan">
+      <button id="addBtn">Añadir</button>
+    </div>
+    <p class="hint" id="hint">Se guarda. Cuando vuelvas seguirá aquí.</p>
+  </section>
+
+  <section class="sec">
+    <h2>Lo que ya está hecho</h2>
+    <p class="sub">Poca cosa todavía. Pero está.</p>
+    <ul class="past" id="past"></ul>
+  </section>
+
+  <section class="daily">
+    <div class="k">hoy</div>
+    <blockquote id="frase">—</blockquote>
+  </section>
+
+  <p class="foot">Para Ari de Julen porque es muy buena · <span id="year"></span></p>
+</div>
+
+<div class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="ptitle">
+  <div class="card">
+    <div class="k" id="pk">plan</div>
+    <h3 id="ptitle"></h3>
+    <p id="pdesc"></p>
+    <button class="close" id="pclose">Cerrar</button>
+  </div>
+</div>
+
+<div id="yt" aria-hidden="true"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   1. LO QUE TIENES QUE EDITAR
+   ═══════════════════════════════════════════════════ */
+
+const FECHA_REENCUENTRO = "2026-09-01";   // el día que la ves
+
+// Los planes. x/y son % dentro del cielo (0-100). hecho:true la pinta azul.
+const PLANES = [
+  { t:"Pizza casera",           d:"Hecha por nosotros. Si sale mal, se pide.",              x:14, y:20 },
+  { t:"El Porsche de Lego",     d:"Montarlo entero. Sin saltarse pasos.",                   x:36, y:11 },
+  { t:"Estrellas en la montaña",d:"Lejos de las farolas, donde se ven de verdad.",           x:59, y:24 },
+  { t:"Ruta por la montaña",    d:"De día. Con el bocadillo correspondiente.",               x:82, y:15 },
+  { t:"Que te pongas preciosa", d:"Y nos vamos a cenar a algún sitio que lo merezca.",       x:74, y:52 },
+  { t:"Escape rooms",           d:"A ver quién resuelve más. Aviso: soy competitivo.",       x:44, y:62 },
+  { t:"Pasear por la playa",    d:"Ya está hecho. Y se repite.",                 x:16, y:76, hecho:true },
+];
+
+// Lo que ya ha pasado
+const PASADO = [
+  { when:"Primera",  what:"Conocernos y ir a comprar juntos" },
+  { when:"Segunda",  what:"Ver cómo España ganó a Francia y cogernos de la mano" },
+  { when:"Tercera",  what:"Nuestro frappé por la playa y un besito muy guay" },
+];
+
+// Las canciones. El "id" es lo que va después de v= en la URL de YouTube.
+// Ej: youtube.com/watch?v=dQw4w9WgXcQ  →  id:"dQw4w9WgXcQ"
+const CANCIONES = [
+  { nombre:"Sweater Weather",  id:"GCdwKhTtNNw" },   // The Neighbourhood
+  { nombre:"Apocalypse",       id:"sElE_BfQ67s" },   // Cigarettes After Sex
+];
+
+// Una frase por día. Rota sola. Añade las que quieras.
+const FRASES = [
+  "Hoy me he acordado de ti sin motivo. Ya van varios días así.",
+  "Lo de ser fría se te da fatal, por cierto.",
+  "Quedan menos días que ayer.",
+  "Si estás leyendo esto es que te has acordado. Bien.",
+  "Tengo ganas de verte, como siempre. Quiero que vuelvas y me cuentes muchas cosas de ti. Me pareces muy interesante y tengo ganas de conocerte poco a poco.",
+  "Agosto es largo pero no infinito.",
+  "Me debes una conversación de las buenas.",
+];
+
+/* ═══════════════════════════════════════════════════
+   2. A PARTIR DE AQUÍ NO HACE FALTA TOCAR NADA
+   ═══════════════════════════════════════════════════ */
+
+/* ── Guardado ──
+   Aquí uso window.storage porque funciona dentro de Claude.
+   Cuando la subas a tu hosting, cambia get/set por localStorage
+   (líneas marcadas abajo) o engánchalo a un backend tuyo.        */
+const KEY = "constelacion:extra";
+let memoria = [];
+
+async function cargar(){
+  try{
+    if(window.storage){ const r = await window.storage.get(KEY); return r ? JSON.parse(r.value) : []; }
+    // return JSON.parse(localStorage.getItem(KEY) || "[]");   // ← al hostearla
+    return memoria;
+  }catch(e){ return []; }
+}
+async function guardar(arr){
+  memoria = arr;
+  try{
+    if(window.storage){ await window.storage.set(KEY, JSON.stringify(arr)); return true; }
+    // localStorage.setItem(KEY, JSON.stringify(arr));         // ← al hostearla
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ── Cuenta atrás ── */
+(function(){
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const fin = new Date(FECHA_REENCUENTRO + "T00:00:00");
+  const d = Math.max(0, Math.round((fin - hoy) / 86400000));
+  document.getElementById("dias").textContent = String(d).padStart(2,"0");
+  if(d === 0) document.querySelector(".count .lbl").textContent = "es hoy";
+  document.getElementById("year").textContent = new Date().getFullYear();
+})();
+
+/* ── Frase del día ── */
+(function(){
+  const inicio = new Date(new Date().getFullYear(),0,0);
+  const dia = Math.floor((new Date() - inicio) / 86400000);
+  document.getElementById("frase").textContent = FRASES[dia % FRASES.length];
+})();
+
+/* ── Pasado ── */
+document.getElementById("past").innerHTML = PASADO.map(p =>
+  `<li><span class="when">${p.when}</span><span class="what">${p.what}</span></li>`
+).join("");
+
+/* ── Constelación ── */
+const constel = document.getElementById("constel");
+const svg = document.getElementById("lines");
+
+function posLibre(i){                   // coloca las estrellas nuevas sin amontonarlas
+  const ang = i * 2.399;                // ángulo áureo
+  const r = 18 + (i % 3) * 9;
+  return { x: 50 + Math.cos(ang) * r * 1.5, y: 46 + Math.sin(ang) * r };
+}
+
+function pintar(todos){
+  constel.querySelectorAll(".node").forEach(n => n.remove());
+
+  todos.forEach((p, i) => {
+    const b = document.createElement("button");
+    b.className = "node" + (p.hecho ? " done" : "");
+    b.style.left = p.x + "%";
+    b.style.top  = p.y + "%";
+    b.innerHTML = `<span class="pt"></span><span class="tag">${p.t}</span>`;
+    b.addEventListener("click", () => abrir(p));
+    constel.appendChild(b);
+  });
+
+  // líneas: cada estrella con la siguiente
+  svg.innerHTML = "";
+  const w = constel.clientWidth, h = constel.clientHeight;
+  for(let i = 0; i < todos.length - 1; i++){
+    const a = todos[i], c = todos[i+1];
+    const l = document.createElementNS("http://www.w3.org/2000/svg","line");
+    l.setAttribute("x1", a.x * w / 100); l.setAttribute("y1", a.y * h / 100);
+    l.setAttribute("x2", c.x * w / 100); l.setAttribute("y2", c.y * h / 100);
+    l.style.animationDelay = (i * 0.12) + "s";
+    svg.appendChild(l);
+  }
+}
+
+/* ── Panel ── */
+const panel = document.getElementById("panel");
+let ultimoFoco = null;
+
+function abrir(p){
+  ultimoFoco = document.activeElement;
+  document.getElementById("pk").textContent   = p.hecho ? "ya pasó" : "pendiente";
+  document.getElementById("ptitle").textContent = p.t;
+  document.getElementById("pdesc").textContent  = p.d || "Sin descripción todavía. Ya la rellenaremos.";
+  panel.classList.add("open");
+  document.getElementById("pclose").focus();
+}
+function cerrar(){
+  panel.classList.remove("open");
+  if(ultimoFoco) ultimoFoco.focus();
+}
+document.getElementById("pclose").addEventListener("click", cerrar);
+panel.addEventListener("click", e => { if(e.target === panel) cerrar(); });
+document.addEventListener("keydown", e => { if(e.key === "Escape") cerrar(); });
+
+/* ── Añadir ── */
+const input = document.getElementById("txt");
+const hint  = document.getElementById("hint");
+let lista = [];
+
+async function añadir(){
+  const t = input.value.trim();
+  if(!t) { input.focus(); return; }
+  const extra = await cargar();
+  const p = { t, d:"Esto lo has añadido tú.", ...posLibre(extra.length), mio:true };
+  extra.push(p);
+  const ok = await guardar(extra);
+  input.value = "";
+  hint.textContent = ok ? "Guardado." : "No se ha podido guardar, pero ahí está.";
+  lista = [...PLANES, ...extra];
+  pintar(lista);
+}
+document.getElementById("addBtn").addEventListener("click", añadir);
+input.addEventListener("keydown", e => { if(e.key === "Enter") añadir(); });
+
+/* ── Música ── */
+const play = document.getElementById("play");
+const ptxt = document.getElementById("playtxt");
+const skip = document.getElementById("skip");
+let pista = 0, player = null, listo = false, sonando = false, fallo = false;
+
+// Carga la API de YouTube
+(function(){
+  const s = document.createElement("script");
+  s.src = "https://www.youtube.com/iframe_api";
+  s.onerror = () => activarPlanB();
+  document.head.appendChild(s);
+  // Si en 4s no ha arrancado (file://, iframe bloqueado, red), plan B
+  setTimeout(() => { if(!listo) activarPlanB(); }, 4000);
+})();
+
+function activarPlanB(){
+  if(fallo) return;
+  fallo = true;
+  ptxt.textContent = "abrir en YouTube";
+  document.getElementById("nota").textContent =
+    "La música se abre en YouTube desde aquí.";
+}
+
+window.onYouTubeIframeAPIReady = function(){
+  player = new YT.Player("yt", {
+    height:"1", width:"1",
+    videoId: CANCIONES[0].id,
+    playerVars:{ controls:0, disablekb:1, playsinline:1, rel:0 },
+    events:{
+      onReady: () => { listo = true; fallo = false; document.getElementById("nota").textContent = ""; },
+      onStateChange: e => {
+        if(e.data === YT.PlayerState.ENDED) player.seekTo(0), player.playVideo();
+        if(e.data === YT.PlayerState.PLAYING){ sonando = true; pintarBoton(); }
+        if(e.data === YT.PlayerState.PAUSED){ sonando = false; pintarBoton(); }
+      },
+      onError: () => { fallo = true; ptxt.textContent = "abrir en YouTube"; }
+    }
+  });
+};
+
+function pintarBoton(){
+  play.classList.toggle("on", sonando);
+  ptxt.textContent = sonando ? CANCIONES[pista].nombre : "poner música";
+}
+
+play.addEventListener("click", () => {
+  if(fallo){ open("https://www.youtube.com/watch?v=" + CANCIONES[pista].id, "_blank"); return; }
+  if(!listo){ ptxt.textContent = "cargando…"; return; }
+  if(sonando) player.pauseVideo();
+  else { player.unMute(); player.playVideo(); }
+});
+
+skip.addEventListener("click", () => {
+  pista = (pista + 1) % CANCIONES.length;
+  if(fallo){ ptxt.textContent = "abrir en YouTube"; return; }
+  if(!listo) return;
+  if(sonando) player.loadVideoById(CANCIONES[pista].id);
+  else { player.cueVideoById(CANCIONES[pista].id); ptxt.textContent = CANCIONES[pista].nombre; }
+});
+
+/* ── Cielo ── */
+(function(){
+  const c = document.getElementById("sky"), ctx = c.getContext("2d");
+  const quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let estrellas = [], fugaz = null, W, H;
+
+  function medir(){
+    W = c.width = innerWidth * devicePixelRatio;
+    H = c.height = innerHeight * devicePixelRatio;
+    c.style.width = innerWidth + "px"; c.style.height = innerHeight + "px";
+    const n = Math.min(220, Math.round(innerWidth * innerHeight / 7000));
+    estrellas = Array.from({length:n}, () => ({
+      x: Math.random()*W, y: Math.random()*H,
+      r: (Math.random()*1.3 + .3) * devicePixelRatio,
+      a: Math.random()*.6 + .15,
+      v: Math.random()*.012 + .003,
+      f: Math.random()*Math.PI*2
+    }));
+  }
+
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    for(const s of estrellas){
+      s.f += s.v;
+      const al = quieto ? s.a : s.a + Math.sin(s.f)*.28;
+      ctx.globalAlpha = Math.max(.05, al);
+      ctx.fillStyle = "#F3EFE6";
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.284); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    if(!quieto){
+      if(!fugaz && Math.random() < .0016){
+        fugaz = { x: Math.random()*W*.7, y: Math.random()*H*.4, l: 0 };
+      }
+      if(fugaz){
+        fugaz.l += 14 * devicePixelRatio;
+        const g = ctx.createLinearGradient(fugaz.x, fugaz.y, fugaz.x + fugaz.l, fugaz.y + fugaz.l*.45);
+        g.addColorStop(0, "rgba(243,239,230,0)");
+        g.addColorStop(1, "rgba(243,239,230,.75)");
+        ctx.strokeStyle = g; ctx.lineWidth = 1.2 * devicePixelRatio;
+        ctx.beginPath();
+        ctx.moveTo(fugaz.x, fugaz.y);
+        ctx.lineTo(fugaz.x + fugaz.l, fugaz.y + fugaz.l*.45);
+        ctx.stroke();
+        if(fugaz.l > W*.5) fugaz = null;
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  medir(); frame();
+  addEventListener("resize", () => { medir(); pintar(lista); });
+})();
+
+/* ── Arranque ── */
+(async function(){
+  const extra = await cargar();
+  lista = [...PLANES, ...extra];
+  pintar(lista);
+})();
+</script>
+</body>
+</html>
